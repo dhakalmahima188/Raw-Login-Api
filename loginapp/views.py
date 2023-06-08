@@ -3,6 +3,7 @@ from django.http import HttpResponse, JsonResponse
 from rest_framework.views import APIView
 import psycopg2
 import json
+from .serializers import EmployeeSerializer
 class SendEmailView(APIView):
     def post(self, request):
         conn = psycopg2.connect(
@@ -155,10 +156,14 @@ class DeleteEmployeeView(APIView):
 
 class AddEmployeeView(APIView):
     def post(self, request):
-        data = json.loads(request.body.decode('utf-8'))
-        email = data.get('email')
-        # email = request.POST.get('email')
-        print(email)
+        print(request.data,type(request.data))
+        #email=request.data['email']
+        #or
+        serializer = EmployeeSerializer(data=request.data)
+        print(type(serializer))
+        if serializer.is_valid():
+            email = serializer.validated_data.get('email')
+            print(email)
 
         conn = psycopg2.connect(
             host="localhost",
