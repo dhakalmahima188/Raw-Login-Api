@@ -5,7 +5,7 @@ import psycopg2
 import json
 from .serializers import EmployeeSerializer
 class SendEmailView(APIView):
-    def post(self, request):
+    def get_connection():
         conn = psycopg2.connect(
             host="localhost",
             port="5432",
@@ -13,6 +13,10 @@ class SendEmailView(APIView):
             user="postgres",
             password="mahima@123"
         )
+        return conn
+    
+    def post(self, request):
+        conn = SendEmailView.get_connection()
 
         recipient_list = []
         cur = conn.cursor()
@@ -38,13 +42,7 @@ class HomeView(APIView):
 
 class CreateTableView(APIView):
     def get(self, request):
-        conn = psycopg2.connect(
-            host="localhost",
-            port="5432",
-            database="postgres",
-            user="postgres",
-            password="mahima@123",
-        )
+        conn = SendEmailView.get_connection()
         cur = conn.cursor()
         cur.execute('''CREATE TABLE IF NOT EXISTS employees
                         (id SERIAL PRIMARY KEY,
@@ -57,13 +55,7 @@ class CreateTableView(APIView):
 
 class UpdateTableView(APIView):
     def get(self, request):
-        conn = psycopg2.connect(
-            host="localhost",
-            port="5432",
-            database="postgres",
-            user="postgres",
-            password="mahima@123",
-        )
+        conn = SendEmailView.get_connection()
         cur = conn.cursor()
         dict1 = {
             "username": "xyz",
@@ -77,13 +69,7 @@ class UpdateTableView(APIView):
 
 class GetEmployeesView(APIView):
     def get(self, request):
-        conn = psycopg2.connect(
-            host="localhost",
-            port="5432",
-            database="postgres",
-            user="postgres",
-            password="mahima@123",
-        )
+        conn = SendEmailView.get_connection()
         cur = conn.cursor()
         cur.execute("SELECT * FROM employees")
         rows = cur.fetchall()
@@ -114,13 +100,7 @@ class LoginView(APIView):
 class GetEmployeeView(APIView):
     def get(self, request, id):
         print(id)
-        conn = psycopg2.connect(
-            host="localhost",
-            port="5432",
-            database="postgres",
-            user="postgres",
-            password="mahima@123",
-        )
+        conn = SendEmailView.get_connection()
         cur = conn.cursor()
         cur.execute("SELECT * FROM employees WHERE id = %s", (id,))
         row = cur.fetchone()
@@ -141,13 +121,7 @@ class GetEmployeeView(APIView):
 class DeleteEmployeeView(APIView):
     def get(self, request, id):
         print(id)
-        conn = psycopg2.connect(
-            host="localhost",
-            port="5432",
-            database="postgres",
-            user="postgres",
-            password="mahima@123",
-        )
+        conn = SendEmailView.get_connection()
         cur = conn.cursor()
         cur.execute("DELETE FROM employees WHERE id = %s", (id,))
         conn.commit()
@@ -165,13 +139,7 @@ class AddEmployeeView(APIView):
             email = serializer.validated_data.get('email')
             print(email)
 
-        conn = psycopg2.connect(
-            host="localhost",
-            port="5432",
-            database="postgres",
-            user="postgres",
-            password="mahima@123",
-        )
+        conn = SendEmailView.get_connection()
         cur = conn.cursor()
         cur.execute("INSERT INTO employees (username, password, email) VALUES (%s, %s, %s)", ('xyz', 'abc', email))
         conn.commit()
