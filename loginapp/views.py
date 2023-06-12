@@ -95,8 +95,9 @@ class GetEmployeesView(APIView):
         for row in rows:
             employee = {
                 'id': row[0],
-                'name': row[1],
+                'username': row[1],
                 'email': row[2],
+                'password': row[3],
             }
             employees.append(employee)
 
@@ -119,8 +120,9 @@ class RegisterView(APIView):
         for row in rows:
             employee = {
                 'id': row[0],
-                'name': row[1],
+                'username': row[1],
                 'email': row[2],
+                'password': row[3],
             }
             employees.append(employee)
 
@@ -134,25 +136,30 @@ class RegisterView(APIView):
     def post(self,request,id):
         if request.method == 'POST':
             token = request.GET.get('token')
-            email = request.POST.get('email')
-            password='xyz'
-            print(password)
-            token = request.GET.get('token')
-            decoded_token = jwt.decode(token, 'your-secret-key', algorithms=['HS256'])
-            email = decoded_token.get('email')
             
-            print(email)
+            decoded_token = jwt.decode(token, 'your-secret-key', algorithms=['HS256'])
+            print(decoded_token)
+            
+            
+            email = decoded_token.get('email')
+            password=decoded_token.get('password')
+            
+            
+            print(email,password)
+            
+         
             conn = SendEmailView.get_connection()
           
             with conn.cursor() as cursor:
                 cursor.execute(
                     "SELECT email FROM employees WHERE id = %s", [id])
                 result = cursor.fetchone()
+               
                 if result:
-                    email = result[0]
+                  #  email = result[0]
                     # Update the employee password with the entered password
-                    cursor.execute("UPDATE employees SET password = %s WHERE email = %s", [
-                                   password, email])
+                    cursor.execute("UPDATE employees SET password = %s WHERE id= %s and email = %s", [
+                                   password,id, email]  )
                     # Redirect to login page after successful registration
                     return HttpResponse("Password updated successfully")
 
@@ -242,6 +249,7 @@ class TokenView(APIView):
                 'id': row[0],
                 'username': row[1],
                 'email': row[2],
+                'password': row[3],
             }
 
             id = employee['id']
@@ -252,6 +260,7 @@ class TokenView(APIView):
                     'id': employee['id'],
                     'username': employee['username'],
                     'email': employee['email'],
+                    'password': employee['password'],
                     'exp': int(token_expiry.timestamp())
                 },
                 'your-secret-key',
