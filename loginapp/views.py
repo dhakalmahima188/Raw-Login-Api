@@ -12,7 +12,9 @@ from rest_framework.response import Response
 from .serializers import EmployeeSerializer
 from datetime import datetime, timedelta
 from rest_framework_simplejwt.tokens import AccessToken
-
+from urllib.parse import urlencode
+from urllib.parse import urlencode
+import jwt
 
 class SendEmailView(APIView):
     def get_connection():
@@ -106,24 +108,53 @@ class GetEmployeesView(APIView):
 
 
 class RegisterView(APIView):
-    def register(request):
+    def get(self, request,id):
+        print(id)
+        conn = SendEmailView.get_connection()
+        cur = conn.cursor()
+        cur.execute("SELECT * FROM employees")
+        rows = cur.fetchall()
+        employees = []
+
+        for row in rows:
+            employee = {
+                'id': row[0],
+                'name': row[1],
+                'email': row[2],
+            }
+            employees.append(employee)
+
+        response_data = {
+            'employees': employees,
+        }
+
+        return response.Response(response_data)
+    
+    
+    def post(self,request,id):
         if request.method == 'POST':
             token = request.GET.get('token')
-            password = request.POST.get('password')
+            email = request.POST.get('email')
+            password='xyz'
+            print(password)
+            token = request.GET.get('token')
+            decoded_token = jwt.decode(token, 'your-secret-key', algorithms=['HS256'])
+            email = decoded_token.get('email')
+            
+            print(email)
             conn = SendEmailView.get_connection()
-
-            # Fetch the employee email from the database using the token
+          
             with conn.cursor() as cursor:
                 cursor.execute(
-                    "SELECT email FROM employee WHERE token = %s", [token])
+                    "SELECT email FROM employees WHERE id = %s", [id])
                 result = cursor.fetchone()
                 if result:
                     email = result[0]
                     # Update the employee password with the entered password
-                    cursor.execute("UPDATE employee SET password = %s WHERE email = %s", [
+                    cursor.execute("UPDATE employees SET password = %s WHERE email = %s", [
                                    password, email])
                     # Redirect to login page after successful registration
-                    return redirect('login')
+                    return HttpResponse("Password updated successfully")
 
             # Handle the case when the employee doesn't exist or the token is invalid
             return redirect('invalid-token')
@@ -139,7 +170,7 @@ class RegisterView(APIView):
             else:
                 email = ""
 
-        return render(request, 'loginapp/register.html', {'email': email})
+            return response.Response({'email': email})
 
 
 class LoginView(APIView):
@@ -200,8 +231,7 @@ class AddEmployeeView(APIView):
 
 
 class TokenView(APIView):
-      def get(self, request, id):
-        print(id)
+       def get(self, request, id):
         conn = SendEmailView.get_connection()
         cur = conn.cursor()
         cur.execute("SELECT * FROM employees WHERE id = %s", (id,))
@@ -213,30 +243,29 @@ class TokenView(APIView):
                 'username': row[1],
                 'email': row[2],
             }
-            
-        
-        id=employee['id']
 
-        # Define the expiration time for the token
-        token_lifetime = timedelta(days=1)
+            id = employee['id']
+            token_lifetime = timedelta(days=1)
+            token_expiry = datetime.now() + token_lifetime
+            access_token = jwt.encode(
+                {
+                    'id': employee['id'],
+                    'username': employee['username'],
+                    'email': employee['email'],
+                    'exp': int(token_expiry.timestamp())
+                },
+                'your-secret-key',
+                algorithm='HS256'
+            )
 
-        # Calculate the token's expiration date and time
-        token_expiry = datetime.now() + token_lifetime
+            token = access_token
 
-        # Generate the access token
-        access_token = AccessToken()
+            base_url = f"http://127.0.0.1:8000/register/{id}"
+            query_params = {'token': token}
 
-        # Set the token's payload
-        access_token['id'] = employee['id']
-        access_token['username'] = employee['username']
-        access_token['email'] = employee['email']
-        # Add other relevant attributes as needed
+            registration_link = base_url + '?' + urlencode(query_params)
+            return HttpResponse(registration_link)
 
-        # Set the token's expiration time
-        access_token['exp'] = int(token_expiry.timestamp())
-
-        # Return the token as a string
-        return HttpResponse(str(access_token))
-            
+        return HttpResponse("Employee not found.")
 
         

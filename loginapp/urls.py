@@ -25,7 +25,7 @@ urlpatterns = [
     path('delete_employee/<int:id>/', DeleteEmployeeView.as_view(), name='delete_employee'),
     path('add_employee/', AddEmployeeView.as_view(), name='add_employee'),
     path('login/', LoginView.as_view(), name='login'),
-    path('register/', RegisterView.as_view(), name='register'),
+    path('register/<int:id>', RegisterView.as_view(), name='register'),
     path('get_token/<int:id>',TokenView.as_view(), name='get_token')
     
 ]
