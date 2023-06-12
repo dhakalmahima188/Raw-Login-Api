@@ -1,5 +1,9 @@
 
-
+<style>
+body {
+    background-color: #ffffff;
+}
+</style>
 # Django Login Project Documentation
 
 ### Initial Setup
@@ -71,4 +75,80 @@ dict1 = {
        }
        cur.execute(
            "INSERT INTO employees (username, password, email) VALUES (%(username)s, %(password)s, %(email)s);", dict1)
+```
+
+### APIs
+#### Employees
+
+| Method | API                | Function             |
+| ------ | ------------------ | -------------------- |
+| POST   | createTable/       | Create employees     |
+| POST   | updateTable/       | Update employees     |
+| GET    | get_employees/     | Get all employees    |
+| GET    | get_employee/id    | Get employee by ID   |
+| POST   | add_employee/      | Add new employee     |
+| POST   | delete_employee/id | Delete employee      |
+
+
+#### Token Generation
+
+| Method | API         | Function  |
+| ------ | ----------- | --------- |
+| GET    | get_token/id| Get token |
+
+#### Register
+
+| Method | API        | Function  |
+| ------ | ---------- | --------- |
+| GET    | register/id| Register  |
+
+#### Login
+
+| Method | API    | Function |
+| ------ | ------ | -------- |
+| POST   | login/ | Login    |
+
+#### Send Email Invitation
+
+| Method | API        | Function         |
+| ------ | ---------- | ---------------- |
+| POST   | send-email/| Send email invite|
+
+
+### JWT token generation
+
+```shell
+```
+
+```shell
+token_lifetime = timedelta(days=1)
+token_expiry = datetime.now() + token_lifetime
+access_token = jwt.encode(
+                {
+                    'id': employee['id'],
+                    'username': employee['username'],
+                    'email': employee['email'],
+                    'password': employee['password'],
+                    'exp': int(token_expiry.timestamp())
+                },
+                'secret9742357373',
+                algorithm='HS256'
+            )
+token = access_token
+base_url = f"http://127.0.0.1:8000/register/{id}"
+query_params = {'token': token}
+registration_link = base_url + '?' + urlencode(query_params)
+```
+
+#### JWT token Decode
+
+```shell
+token = request.GET.get('token')
+decoded_token = jwt.decode(token, 'secret9742357373', algorithms=['HS256'])
+email = decoded_token.get('email')
+
+```
+Send Email Invitation:
+```shell
+send_mail(subject, message, from_email, recipient_list)
 ```
