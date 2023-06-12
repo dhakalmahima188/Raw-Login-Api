@@ -136,13 +136,15 @@ class RegisterView(APIView):
     def post(self,request,id):
         if request.method == 'POST':
             token = request.GET.get('token')
+            password = request.data.get('password')
+            print('naya',password)
             
-            decoded_token = jwt.decode(token, 'your-secret-key', algorithms=['HS256'])
+            decoded_token = jwt.decode(token, 'secret9742357373', algorithms=['HS256'])
             print(decoded_token)
             
             
             email = decoded_token.get('email')
-            password=decoded_token.get('password')
+            #password=decoded_token.get('password')
             
             
             print(email,password)
@@ -156,10 +158,13 @@ class RegisterView(APIView):
                 result = cursor.fetchone()
                
                 if result:
-                  #  email = result[0]
+                    #email = result[0]
+                    print(result[0],email,id)
                     # Update the employee password with the entered password
                     cursor.execute("UPDATE employees SET password = %s WHERE id= %s and email = %s", [
                                    password,id, email]  )
+                    conn.commit()
+                    
                     # Redirect to login page after successful registration
                     return HttpResponse("Password updated successfully")
 
@@ -263,7 +268,7 @@ class TokenView(APIView):
                     'password': employee['password'],
                     'exp': int(token_expiry.timestamp())
                 },
-                'your-secret-key',
+                'secret9742357373',
                 algorithm='HS256'
             )
 
