@@ -1,9 +1,5 @@
 
-<style>
-body {
-    background-color: #ffffff;
-}
-</style>
+
 # Django Login Project Documentation
 
 ### Initial Setup
