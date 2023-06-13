@@ -32,8 +32,7 @@ class SendEmailView(APIView):
         cur = conn.cursor()
         cur.execute("SELECT * FROM employees")
         rows = cur.fetchall()
-        for row in rows:
-             
+        for row in rows:             
             id=row[0] 
             username=row[1] 
             password=row[3]
@@ -182,6 +181,7 @@ class RegisterView(APIView):
         if request.method == 'POST':
             token = request.GET.get('token')
             password = request.data.get('password')
+            username=request.data.get('username')
             print('naya',password)            
             decoded_token = jwt.decode(token, 'secret9742357373', algorithms=['HS256'])
             print(decoded_token)
@@ -205,8 +205,8 @@ class RegisterView(APIView):
                     #email = result[0]
                     print(result[0],email,id)
                     # Update the employee password with the entered password
-                    cursor.execute("UPDATE employees SET password = %s WHERE id= %s and email = %s", [
-                                   password,id, email]  )
+                    cursor.execute("UPDATE employees SET password = %s, username= %s WHERE id= %s and email = %s", [
+                                   password,username,id, email]  )
                     conn.commit()
                     
                     # Redirect to login page after successful registration
@@ -229,9 +229,37 @@ class RegisterView(APIView):
             return response.Response({'email': email})
 
 
-class LoginView(APIView):
-    def get(self, request):
-        return HttpResponse("Hello People, Have a good day !!!")
+class LoginView(APIView):   
+    def post(self, request):
+        print(request.data, type(request.data))
+        # email=request.data['email']
+        # or
+        serializer = EmployeeSerializer(data=request.data)
+        print(type(serializer))
+        if serializer.is_valid():
+            username= serializer.validated_data.get('username')
+            email = serializer.validated_data.get('email')
+            password=serializer.validated_data.get('password')
+            print(username,email,password)
+ 
+        conn = SendEmailView.get_connection()
+        cur = conn.cursor()
+        cur.execute("SELECT * FROM employees ")
+        rows = cur.fetchall()
+        login_successful = False
+
+        for row in rows:
+            print(row[1], row[2], row[3])
+            if row[1] == username and row[2] == email and row[3] == password:
+                login_successful = True
+                break
+
+        if login_successful:
+            return HttpResponse("Login successfully")
+        else:
+            return HttpResponse("Invalid credentials")
+            
+
 
 
 class GetEmployeeView(APIView):
