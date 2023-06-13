@@ -1,13 +1,13 @@
 
 
-# Django Login Project Documentation
+##Django Login Project Documentation
 
 ### Initial Setup
 
 #### Setup Virtual Environment
 
 ```shell
-# Create and activate virtual environment
+
 python3 -m venv venv
 source venv/bin/activate
 ```
@@ -144,7 +144,7 @@ decoded_token = jwt.decode(token, 'secret9742357373', algorithms=['HS256'])
 email = decoded_token.get('email')
 
 ```
-Send Email Invitation:
+### Send Email Invitation:
 ```shell
 send_mail(subject, message, from_email, recipient_list)
 ```

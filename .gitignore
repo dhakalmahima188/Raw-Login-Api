@@ -1,3 +1,4 @@
 venv
 .env
 .vscode
+loginproject/__pycache__

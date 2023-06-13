@@ -5,7 +5,7 @@ from rest_framework import status, response
 import psycopg2
 import json
 from .serializers import EmployeeSerializer
-from django.shortcuts import render, redirect
+from django.shortcuts import  redirect
 from rest_framework.authtoken.views import ObtainAuthToken
 from rest_framework.authtoken.models import Token 
 from rest_framework.response import Response
@@ -27,26 +27,71 @@ class SendEmailView(APIView):
         )
         return conn
 
-    def post(self, request):
+    def get(self, request):
         conn = SendEmailView.get_connection()
-
-        recipient_list = []
         cur = conn.cursor()
-        cur.execute("SELECT * FROM user_emails")
+        cur.execute("SELECT * FROM employees")
         rows = cur.fetchall()
         for row in rows:
-            column2 = row[1]
-            recipient_list.append(column2)
-            print(column2)
+             
+            id=row[0] 
+            username=row[1] 
+            password=row[3]
+            send_to_mail=row[2]    
+            print(id,username,password,send_to_mail)
+            token=TokenView.get_token(self,request,id)
+            print(token)
+            subject = 'Invitation-link'
+            message = f'Register for the event by clicking the link below:  {token}'
+            from_email = 'mahi.testmail18@gmail.com'  # settings.EMAIL_HOST_USER
+            send_mail(subject, message, from_email, [send_to_mail])
         cur.close()
         conn.close()
-
-        subject = 'Invitation-link'
-        message = 'Register for the event by clicking the link below: we neded to send a token here'
-        from_email = 'mahi.testmail18@gmail.com'  # Replace with your email address
-
-        send_mail(subject, message, from_email, recipient_list)
         return HttpResponse('Email sent successfully')
+
+
+class TokenView(APIView):
+       def get_token(self, request, id):
+        conn = SendEmailView.get_connection()
+        cur = conn.cursor()
+        cur.execute("SELECT * FROM employees WHERE id = %s", (id,))
+        row = cur.fetchone()
+
+        if row:
+            employee = {
+                'id': row[0],
+                'username': row[1],
+                'email': row[2],
+                'password': row[3],
+            }
+
+            id = employee['id']
+            token_lifetime = timedelta(days=1)
+            token_expiry = datetime.now() + token_lifetime
+            access_token = jwt.encode(
+                {
+                    'id': employee['id'],
+                    'username': employee['username'],
+                    'email': employee['email'],
+                    'password': employee['password'],
+                    'exp': int(token_expiry.timestamp())
+                },
+                'secret9742357373',
+                algorithm='HS256'
+            )
+
+            token = access_token
+
+            base_url = f"http://127.0.0.1:8000/register/{id}"
+            query_params = {'token': token}
+
+            registration_link = base_url + '?' + urlencode(query_params)
+            return registration_link
+
+        return HttpResponse("Employee not found.")
+
+        
+
 
 
 class HomeView(APIView):
@@ -137,8 +182,7 @@ class RegisterView(APIView):
         if request.method == 'POST':
             token = request.GET.get('token')
             password = request.data.get('password')
-            print('naya',password)
-            
+            print('naya',password)            
             decoded_token = jwt.decode(token, 'secret9742357373', algorithms=['HS256'])
             print(decoded_token)
             
@@ -241,45 +285,3 @@ class AddEmployeeView(APIView):
 
         return HttpResponse("Employee added successfully.")
 
-
-class TokenView(APIView):
-       def get(self, request, id):
-        conn = SendEmailView.get_connection()
-        cur = conn.cursor()
-        cur.execute("SELECT * FROM employees WHERE id = %s", (id,))
-        row = cur.fetchone()
-
-        if row:
-            employee = {
-                'id': row[0],
-                'username': row[1],
-                'email': row[2],
-                'password': row[3],
-            }
-
-            id = employee['id']
-            token_lifetime = timedelta(days=1)
-            token_expiry = datetime.now() + token_lifetime
-            access_token = jwt.encode(
-                {
-                    'id': employee['id'],
-                    'username': employee['username'],
-                    'email': employee['email'],
-                    'password': employee['password'],
-                    'exp': int(token_expiry.timestamp())
-                },
-                'secret9742357373',
-                algorithm='HS256'
-            )
-
-            token = access_token
-
-            base_url = f"http://127.0.0.1:8000/register/{id}"
-            query_params = {'token': token}
-
-            registration_link = base_url + '?' + urlencode(query_params)
-            return HttpResponse(registration_link)
-
-        return HttpResponse("Employee not found.")
-
-        

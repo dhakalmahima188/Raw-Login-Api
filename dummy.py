@@ -12,3 +12,9 @@
  "username":"uxcam90", 
  "password":"cup@123",
  "email":"ff@gmail.com"}
+
+
+{
+"username":"Mahimadhakal",
+"email":"dhakalmahima18@gmail.com",
+"password":"cup@123"}
