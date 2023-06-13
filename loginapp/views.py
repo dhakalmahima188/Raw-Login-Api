@@ -244,6 +244,7 @@ class LoginView(APIView):
  
         conn = SendEmailView.get_connection()
         cur = conn.cursor()
+        
         cur.execute("SELECT * FROM employees ")
         rows = cur.fetchall()
         login_successful = False
