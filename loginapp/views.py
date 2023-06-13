@@ -48,7 +48,44 @@ class SendEmailView(APIView):
         conn.close()
         return HttpResponse('Email sent successfully')
 
+class EditView(APIView):
+    def get(self,request,id):
+        conn = SendEmailView.get_connection()
+        cur = conn.cursor()
+        cur.execute("SELECT * FROM employees WHERE id = %s", (id,))
+        row = cur.fetchone()
 
+        if row:
+            employee = {
+                'id': row[0],
+                'username': row[1],
+                'email': row[2],
+                'password': row[3],
+            }
+            response_data = {
+                'employee': employee,
+            }
+            return response.Response(response_data)
+        else:
+            return response.Response({'error': 'Employee not found'}, status=404)
+        
+    def post(self,request,id):
+        id=request.data.get('id')
+        username=request.data.get('username')
+        email=request.data.get('email')
+        password=request.data.get('password')
+        print(id,username,email,password)
+        
+        conn = SendEmailView.get_connection()
+        cur = conn.cursor()
+        
+        cur.execute("UPDATE employees SET username = %s, email= %s, password= %s WHERE id= %s", [username,email,password,id]  )
+        cur.execute("SELECT * FROM employees WHERE id = %s", (id,))
+        result=cur.fetchone()
+        print(result)
+        conn.commit()
+        return HttpResponse("Profile edited successfully")
+        
 class TokenView(APIView):
        def get_token(self, request, id):
         conn = SendEmailView.get_connection()

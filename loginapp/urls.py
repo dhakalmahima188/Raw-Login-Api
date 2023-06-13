@@ -11,7 +11,8 @@ from loginapp.views import (
     AddEmployeeView,
     LoginView,
     RegisterView,
-    TokenView
+    TokenView,
+    EditView
     
 )
 
@@ -26,6 +27,7 @@ urlpatterns = [
     path('add_employee/', AddEmployeeView.as_view(), name='add_employee'),
     path('login/', LoginView.as_view(), name='login'),
     path('register/<int:id>', RegisterView.as_view(), name='register'),
-    path('get_token/<int:id>',TokenView.as_view(), name='get_token')
+    path('get_token/<int:id>',TokenView.as_view(), name='get_token'),
+    path('edit/<int:id>', EditView.as_view(), name='edit')
     
 ]
