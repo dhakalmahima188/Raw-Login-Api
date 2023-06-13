@@ -126,9 +126,6 @@ class TokenView(APIView):
 
         return HttpResponse("Employee not found.")
 
-        
-
-
 
 class HomeView(APIView):
     def get(self, request):

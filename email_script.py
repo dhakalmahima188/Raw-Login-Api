@@ -1,5 +1,4 @@
 import psycopg2
-import time
 
 class DatabasePostgress:
     def __init__(self, database_email):

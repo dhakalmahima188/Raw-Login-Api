@@ -1,11 +1,6 @@
 import psycopg2
-import os
-
 import time
 import datetime
-
-
-
 
 class DatabaseManpasswordr:
     def __init__(self, database_email):
