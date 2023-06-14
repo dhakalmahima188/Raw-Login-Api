@@ -148,3 +148,35 @@ email = decoded_token.get('email')
 ```shell
 send_mail(subject, message, from_email, recipient_list)
 ```
+###  Login session in cookie.
+##### Save in cookie
+
+```shell
+response1.set_cookie('id', if) 
+response1.set_cookie('is_admin', False)  
+```
+
+##### Retrive from in cookie
+```shell
+user_id=int(request.COOKIES.get('id'))   
+is_admin=request.COOKIES.get('is_admin') 
+```
+
+### Make Admin
+```shell
+ cur.execute("UPDATE employees SET is_admin = %s WHERE id= %s", [True,id])
+ response2.set_cookie('is_admin',True)     
+```
+
+| Method | API        | Function         |
+| ------ | ---------- | ---------------- |
+| POST   | make_admin/| give admin acess to given id|
+
+### Deactivate Account
+```shell
+cur.execute("UPDATE employees SET is_active = %s WHERE id= %s", [False,id]  
+  ```
+
+| Method | API        | Function         |
+| ------ | ---------- | ---------------- |
+| POST   | deavtivate/| deactivate the account|
