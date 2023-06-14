@@ -1,18 +1,12 @@
 from django.core.mail import send_mail
-from django.http import HttpResponse, JsonResponse
+from django.http import HttpResponse,HttpRequest
 from rest_framework.views import APIView
 from rest_framework import status, response
 import psycopg2
-import json
 from .serializers import EmployeeSerializer
 from django.shortcuts import  redirect
-from rest_framework.authtoken.views import ObtainAuthToken
-from rest_framework.authtoken.models import Token 
-from rest_framework.response import Response
 from .serializers import EmployeeSerializer
 from datetime import datetime, timedelta
-from rest_framework_simplejwt.tokens import AccessToken
-from urllib.parse import urlencode
 from urllib.parse import urlencode
 import jwt
 
@@ -50,27 +44,33 @@ class SendEmailView(APIView):
 
 class EditView(APIView):
     def get(self,request,id):
-        conn = SendEmailView.get_connection()
-        cur = conn.cursor()
-        cur.execute("SELECT * FROM employees WHERE id = %s", (id,))
-        row = cur.fetchone()
+        
+        user_id=int(request.COOKIES.get('id'))
+        
+        if user_id==id:
+            conn = SendEmailView.get_connection()
+            cur = conn.cursor()
+            cur.execute("SELECT * FROM employees WHERE id = %s", (id,))
+            row = cur.fetchone()
 
-        if row:
-            employee = {
-                'id': row[0],
-                'username': row[1],
-                'email': row[2],
-                'password': row[3],
-            }
-            response_data = {
-                'employee': employee,
-            }
-            return response.Response(response_data)
+            if row:
+                employee = {
+                    'id': row[0],
+                    'username': row[1],
+                    'email': row[2],
+                    'password': row[3],
+                }
+                response_data = {
+                    'employee': employee,
+                }
+                return response.Response(response_data)
+            else:
+                return response.Response({'error': 'Employee not found'}, status=404)
         else:
-            return response.Response({'error': 'Employee not found'}, status=404)
+            return response.Response("You are not authorized to edit this profile")
         
     def post(self,request,id):
-        id=request.data.get('id')
+        
         username=request.data.get('username')
         email=request.data.get('email')
         password=request.data.get('password')
@@ -84,7 +84,7 @@ class EditView(APIView):
         result=cur.fetchone()
         print(result)
         conn.commit()
-        return HttpResponse("Profile edited successfully")
+        return response.Response("Profile edited successfully")
         
 class TokenView(APIView):
        def get_token(self, request, id):
@@ -124,12 +124,12 @@ class TokenView(APIView):
             registration_link = base_url + '?' + urlencode(query_params)
             return registration_link
 
-        return HttpResponse("Employee not found.")
+        return response.Response("Employee not found.")
 
 
 class HomeView(APIView):
     def get(self, request):
-        return HttpResponse("Hello People, Have a good day !!!")
+        return response.Response("Hello People, Have a good day !!!")
 
 
 class CreateTableView(APIView):
@@ -143,7 +143,7 @@ class CreateTableView(APIView):
                         password TEXT NOT NULL)''')
         conn.commit()
         conn.close()
-        return HttpResponse("Table created successfully")
+        return response.Response("Table created successfully")
 
 
 class UpdateTableView(APIView):
@@ -159,7 +159,7 @@ class UpdateTableView(APIView):
             "INSERT INTO employees (username, password, email) VALUES (%(username)s, %(password)s, %(email)s);", dict1)
         conn.commit()
         conn.close()
-        return HttpResponse("Table updated successfully")
+        return response.Response("Table updated successfully")
 
 
 class GetEmployeesView(APIView):
@@ -244,7 +244,7 @@ class RegisterView(APIView):
                     conn.commit()
                     
                     # Redirect to login page after successful registration
-                    return HttpResponse("Password updated successfully")
+                    return response.Response("Password updated successfully")
 
             # Handle the case when the employee doesn't exist or the token is invalid
             return redirect('invalid-token')
@@ -264,6 +264,7 @@ class RegisterView(APIView):
 
 
 class LoginView(APIView):   
+        
     def post(self, request):
         print(request.data, type(request.data))
         # email=request.data['email']
@@ -284,15 +285,18 @@ class LoginView(APIView):
         login_successful = False
 
         for row in rows:
-            print(row[1], row[2], row[3])
+            print(row[0],row[1], row[2], row[3])
             if row[1] == username and row[2] == email and row[3] == password:
                 login_successful = True
                 break
-
+        response1=HttpResponse()
         if login_successful:
-            return HttpResponse("Login successfully")
+            response1 = response.Response("Login successful")
+            response1.set_cookie('id', row[0])        
+             
+            return response1
         else:
-            return HttpResponse("Invalid credentials")
+            return response.Response("Invalid credentials")
             
 
 
@@ -326,7 +330,7 @@ class DeleteEmployeeView(APIView):
         cur = conn.cursor()
         cur.execute("DELETE FROM employees WHERE id = %s", (id,))
         conn.commit()
-        return HttpResponse("Employee deleted successfully")
+        return response.Response("Employee deleted successfully")
 
 
 class AddEmployeeView(APIView):
@@ -346,5 +350,5 @@ class AddEmployeeView(APIView):
             "INSERT INTO employees (username, password, email) VALUES (%s, %s, %s)", ('xyz', 'abc', email))
         conn.commit()
 
-        return HttpResponse("Employee added successfully.")
+        return response.Response("Employee added successfully.")
 
