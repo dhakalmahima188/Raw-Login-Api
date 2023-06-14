@@ -18,3 +18,12 @@
 "username":"Mahimadhakal",
 "email":"dhakalmahima18@gmail.com",
 "password":"cup@123"}
+
+
+{
+     
+            "username": "xggfgyz",
+            "email": "mahima@uxcam.com",
+            "password": "abc",
+          
+        }

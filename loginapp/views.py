@@ -140,7 +140,8 @@ class CreateTableView(APIView):
                         (id SERIAL PRIMARY KEY,
                         username TEXT NOT NULL,
                         email TEXT NOT NULL,
-                        password TEXT NOT NULL)''')
+                        password TEXT NOT NULL,
+                        is_active BOOLEAN DEFAULT FALSE)''')
         conn.commit()
         conn.close()
         return response.Response("Table created successfully")
@@ -153,10 +154,11 @@ class UpdateTableView(APIView):
         dict1 = {
             "username": "xyz",
             "password": "xyz",
-            "email": "dhakalmahima18@gmail.com"
+            "email": "dhakalmahima18@gmail.com",
+            "is_active": False
         }
         cur.execute(
-            "INSERT INTO employees (username, password, email) VALUES (%(username)s, %(password)s, %(email)s);", dict1)
+            "INSERT INTO employees (username, password, email,is_active) VALUES (%(username)s, %(password)s, %(email)s,%(is_active)s);", dict1)
         conn.commit()
         conn.close()
         return response.Response("Table updated successfully")
@@ -176,6 +178,7 @@ class GetEmployeesView(APIView):
                 'username': row[1],
                 'email': row[2],
                 'password': row[3],
+                'is_active': row[4] if row[4] else False
             }
             employees.append(employee)
 
@@ -201,6 +204,7 @@ class RegisterView(APIView):
                 'username': row[1],
                 'email': row[2],
                 'password': row[3],
+                 'is_active': row[4] if row[4] else False
             }
             employees.append(employee)
 
@@ -215,19 +219,10 @@ class RegisterView(APIView):
         if request.method == 'POST':
             token = request.GET.get('token')
             password = request.data.get('password')
-            username=request.data.get('username')
-            print('naya',password)            
-            decoded_token = jwt.decode(token, 'secret9742357373', algorithms=['HS256'])
-            print(decoded_token)
-            
-            
+            username=request.data.get('username')             
+            decoded_token = jwt.decode(token, 'secret9742357373', algorithms=['HS256'])           
             email = decoded_token.get('email')
-            #password=decoded_token.get('password')
-            
-            
-            print(email,password)
-            
-         
+       
             conn = SendEmailView.get_connection()
           
             with conn.cursor() as cursor:
@@ -236,11 +231,12 @@ class RegisterView(APIView):
                 result = cursor.fetchone()
                
                 if result:
-                    #email = result[0]
+                   
                     print(result[0],email,id)
+                    is_active=True
                     # Update the employee password with the entered password
-                    cursor.execute("UPDATE employees SET password = %s, username= %s WHERE id= %s and email = %s", [
-                                   password,username,id, email]  )
+                    cursor.execute("UPDATE employees SET password = %s, username= %s, is_active=%s WHERE id= %s and email = %s", [
+                                   password,username,is_active,id, email]  )
                     conn.commit()
                     
                     # Redirect to login page after successful registration
@@ -285,8 +281,8 @@ class LoginView(APIView):
         login_successful = False
 
         for row in rows:
-            print(row[0],row[1], row[2], row[3])
-            if row[1] == username and row[2] == email and row[3] == password:
+            print(row[0],row[1], row[2], row[3],row[4])
+            if row[1] == username and row[2] == email and row[3] == password and row[4]==True:
                 login_successful = True
                 break
         response1=HttpResponse()
@@ -351,4 +347,11 @@ class AddEmployeeView(APIView):
         conn.commit()
 
         return response.Response("Employee added successfully.")
-
+    
+class DeactivateView(APIView):
+    def post(self,request,id):
+        conn = SendEmailView.get_connection()
+        cur = conn.cursor()
+        cur.execute("UPDATE employees SET is_active = %s WHERE id= %s", [False,id]  )
+        return response.Response("Employee deactivated successfully")
+        
