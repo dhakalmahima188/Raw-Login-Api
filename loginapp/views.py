@@ -43,11 +43,10 @@ class SendEmailView(APIView):
         return HttpResponse('Email sent successfully')
 
 class EditView(APIView):
-    def get(self,request,id):
-        
-        user_id=int(request.COOKIES.get('id'))
-        
-        if user_id==id:
+    def get(self,request,id):        
+        user_id=int(request.COOKIES.get('id'))  
+        is_admin=request.COOKIES.get('is_admin')  
+        if user_id==id or is_admin:
             conn = SendEmailView.get_connection()
             cur = conn.cursor()
             cur.execute("SELECT * FROM employees WHERE id = %s", (id,))
@@ -70,7 +69,8 @@ class EditView(APIView):
             return response.Response("You are not authorized to edit this profile")
         
     def post(self,request,id):
-        
+        user_id=int(request.COOKIES.get('id'))   
+        is_admin=request.COOKIES.get('is_admin')   
         username=request.data.get('username')
         email=request.data.get('email')
         password=request.data.get('password')
@@ -78,13 +78,15 @@ class EditView(APIView):
         
         conn = SendEmailView.get_connection()
         cur = conn.cursor()
-        
-        cur.execute("UPDATE employees SET username = %s, email= %s, password= %s WHERE id= %s", [username,email,password,id]  )
-        cur.execute("SELECT * FROM employees WHERE id = %s", (id,))
-        result=cur.fetchone()
-        print(result)
-        conn.commit()
-        return response.Response("Profile edited successfully")
+        if user_id==id or is_admin==True:
+            cur.execute("UPDATE employees SET username = %s, email= %s, password= %s WHERE id= %s", [username,email,password,id]  )
+            cur.execute("SELECT * FROM employees WHERE id = %s", (id,))
+            result=cur.fetchone()
+            print(result)
+            conn.commit()
+            return response.Response("Profile edited successfully")
+        else:
+            return response.Response("You are not authorized to edit this profile")
         
 class TokenView(APIView):
        def get_token(self, request, id):
@@ -141,7 +143,8 @@ class CreateTableView(APIView):
                         username TEXT NOT NULL,
                         email TEXT NOT NULL,
                         password TEXT NOT NULL,
-                        is_active BOOLEAN DEFAULT FALSE)''')
+                        is_active BOOLEAN DEFAULT FALSE,
+                        is_admin BOOLEAN DEFAULT FALSE)''')
         conn.commit()
         conn.close()
         return response.Response("Table created successfully")
@@ -155,10 +158,11 @@ class UpdateTableView(APIView):
             "username": "xyz",
             "password": "xyz",
             "email": "dhakalmahima18@gmail.com",
-            "is_active": False
+            "is_active": False,
+            "is_admin": False
         }
         cur.execute(
-            "INSERT INTO employees (username, password, email,is_active) VALUES (%(username)s, %(password)s, %(email)s,%(is_active)s);", dict1)
+            "INSERT INTO employees (username, password, email,is_active,is_admin) VALUES (%(username)s, %(password)s, %(email)s,%(is_active)s, %(is_admin)s);", dict1)
         conn.commit()
         conn.close()
         return response.Response("Table updated successfully")
@@ -178,7 +182,8 @@ class GetEmployeesView(APIView):
                 'username': row[1],
                 'email': row[2],
                 'password': row[3],
-                'is_active': row[4] if row[4] else False
+                'is_active': row[4] if row[4] else False,
+                'is_admin': row[5] if row[5] else False
             }
             employees.append(employee)
 
@@ -204,7 +209,8 @@ class RegisterView(APIView):
                 'username': row[1],
                 'email': row[2],
                 'password': row[3],
-                 'is_active': row[4] if row[4] else False
+                 'is_active': row[4] if row[4] else False,
+                'is_admin': row[5] if row[5] else False
             }
             employees.append(employee)
 
@@ -219,7 +225,8 @@ class RegisterView(APIView):
         if request.method == 'POST':
             token = request.GET.get('token')
             password = request.data.get('password')
-            username=request.data.get('username')             
+            username=request.data.get('username') 
+            is_admin=False      
             decoded_token = jwt.decode(token, 'secret9742357373', algorithms=['HS256'])           
             email = decoded_token.get('email')
        
@@ -235,8 +242,8 @@ class RegisterView(APIView):
                     print(result[0],email,id)
                     is_active=True
                     # Update the employee password with the entered password
-                    cursor.execute("UPDATE employees SET password = %s, username= %s, is_active=%s WHERE id= %s and email = %s", [
-                                   password,username,is_active,id, email]  )
+                    cursor.execute("UPDATE employees SET password = %s, username= %s, is_active=%s, is_admin=%s WHERE id= %s and email = %s", [
+                                   password,username,is_active,is_admin,id, email]  )
                     conn.commit()
                     
                     # Redirect to login page after successful registration
@@ -281,14 +288,15 @@ class LoginView(APIView):
         login_successful = False
 
         for row in rows:
-            print(row[0],row[1], row[2], row[3],row[4])
+            print(row[0],row[1], row[2], row[3],row[4],row[5])
             if row[1] == username and row[2] == email and row[3] == password and row[4]==True:
                 login_successful = True
                 break
         response1=HttpResponse()
         if login_successful:
             response1 = response.Response("Login successful")
-            response1.set_cookie('id', row[0])        
+            response1.set_cookie('id', row[0]) 
+            response1.set_cookie('is_admin', row[5])       
              
             return response1
         else:
@@ -354,4 +362,17 @@ class DeactivateView(APIView):
         cur = conn.cursor()
         cur.execute("UPDATE employees SET is_active = %s WHERE id= %s", [False,id]  )
         return response.Response("Employee deactivated successfully")
+
+class MakeAdminView(APIView):
+    def get(self,request,id):
+        conn = SendEmailView.get_connection()
+        cur = conn.cursor()
+        cur.execute("UPDATE employees SET is_admin = %s WHERE id= %s", [True,id]  )
+        cur.execute("SELECT * FROM employees WHERE id = %s", (id,))
+        result=cur.fetchone()
+        response2=HttpResponse()
+        response2 = response.Response("Sucessfully made admin")
+        response2=response.Response(result)      
+        response2.set_cookie('is_admin',True)     
         
+        return response2

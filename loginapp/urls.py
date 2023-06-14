@@ -13,7 +13,8 @@ from loginapp.views import (
     RegisterView,
     TokenView,
     EditView,
-    DeactivateView
+    DeactivateView,
+    MakeAdminView
     
 )
 
@@ -30,6 +31,7 @@ urlpatterns = [
     path('register/<int:id>', RegisterView.as_view(), name='register'),
     path('get_token/<int:id>',TokenView.as_view(), name='get_token'),
     path('edit/<int:id>', EditView.as_view(), name='edit'),
-    path('deactivate/<int:id>', DeactivateView.as_view(), name='deactivate')
+    path('deactivate/<int:id>', DeactivateView.as_view(), name='deactivate'),
+    path('make_admin/<int:id>', MakeAdminView.as_view(), name='make_admin'),
     
 ]

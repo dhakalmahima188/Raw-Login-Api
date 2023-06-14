@@ -27,3 +27,18 @@
             "password": "abc",
           
         }
+
+
+{
+    "username":  "hawa @123",
+    "email":"mahima@uxcam.com",
+   "password": "abc"
+  }
+
+{
+            
+            "username": "xyz",
+            "email": "076bct033.mahima@pcampus.edu.np",
+            "password": "hehe"
+      
+        }
