@@ -184,9 +184,8 @@ cur.execute("UPDATE employees SET is_active = %s WHERE id= %s", [False,id]
 
 
 ### Sequence Diagram
-![alt text](https://ibb.co/gV5ZPcT)
-
+![alt text](https://github.com/dhakalmahima188/Raw-Login-Api/blob/master/diagrams/sequence.png)
 
 
 ### Activity Diagram
-![alt text](https://ibb.co/vmms9kv)
+![alt text](https://github.com/dhakalmahima188/Raw-Login-Api/blob/master/diagrams/activity.png)
