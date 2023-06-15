@@ -180,3 +180,12 @@ cur.execute("UPDATE employees SET is_active = %s WHERE id= %s", [False,id]
 | Method | API        | Function         |
 | ------ | ---------- | ---------------- |
 | POST   | deavtivate/| deactivate the account|
+
+
+
+### Sequence Diagram
+![alt text](https://github.com/dhakalmahima188/Raw-Login-Api/blob/master/diagrams/sequence.png)
+
+
+### Activity Diagram
+![alt text](https://github.com/dhakalmahima188/Raw-Login-Api/blob/master/diagrams/activity.png)
