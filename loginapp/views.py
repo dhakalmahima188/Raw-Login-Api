@@ -40,7 +40,7 @@ class SendEmailView(APIView):
             send_mail(subject, message, from_email, [send_to_mail])
         cur.close()
         conn.close()
-        return HttpResponse('Email sent successfully')
+        return HttpResponse('Email sent successfully',status=status.HTTP_200_OK)
 
 class EditView(APIView):
     def get(self,request,id):        
@@ -66,7 +66,7 @@ class EditView(APIView):
             else:
                 return response.Response({'error': 'Employee not found'}, status=404)
         else:
-            return response.Response("You are not authorized to edit this profile")
+            return response.Response("You are not authorized to edit this profile",status=status.HTTP_403_FORBIDDEN)
         
     def post(self,request,id):
         user_id=int(request.COOKIES.get('id'))   
@@ -86,7 +86,7 @@ class EditView(APIView):
             conn.commit()
             return response.Response("Profile edited successfully")
         else:
-            return response.Response("You are not authorized to edit this profile")
+            return response.Response("You are not authorized to edit this profile",status=status.HTTP_403_FORBIDDEN)
         
 class TokenView(APIView):
        def get_token(self, request, id):
@@ -126,7 +126,7 @@ class TokenView(APIView):
             registration_link = base_url + '?' + urlencode(query_params)
             return registration_link
 
-        return response.Response("Employee not found.")
+        return response.Response("Employee not found.", status=404)
 
 
 class HomeView(APIView):
@@ -147,7 +147,7 @@ class CreateTableView(APIView):
                         is_admin BOOLEAN DEFAULT FALSE)''')
         conn.commit()
         conn.close()
-        return response.Response("Table created successfully")
+        return response.Response("Table created successfully", status=status.HTTP_201_CREATED)
 
 
 class UpdateTableView(APIView):
@@ -165,7 +165,7 @@ class UpdateTableView(APIView):
             "INSERT INTO employees (username, password, email,is_active,is_admin) VALUES (%(username)s, %(password)s, %(email)s,%(is_active)s, %(is_admin)s);", dict1)
         conn.commit()
         conn.close()
-        return response.Response("Table updated successfully")
+        return response.Response("Table updated successfully", status=status.HTTP_200_OK)
 
 
 class GetEmployeesView(APIView):
@@ -334,7 +334,7 @@ class DeleteEmployeeView(APIView):
         cur = conn.cursor()
         cur.execute("DELETE FROM employees WHERE id = %s", (id,))
         conn.commit()
-        return response.Response("Employee deleted successfully")
+        return response.Response("Employee deleted successfully", status=status.HTTP_200_OK)
 
 
 class AddEmployeeView(APIView):
@@ -354,14 +354,14 @@ class AddEmployeeView(APIView):
             "INSERT INTO employees (username, password, email) VALUES (%s, %s, %s)", ('xyz', 'abc', email))
         conn.commit()
 
-        return response.Response("Employee added successfully.")
+        return response.Response("Employee added successfully.",status=status.HTTP_201_CREATED)
     
 class DeactivateView(APIView):
     def post(self,request,id):
         conn = SendEmailView.get_connection()
         cur = conn.cursor()
         cur.execute("UPDATE employees SET is_active = %s WHERE id= %s", [False,id]  )
-        return response.Response("Employee deactivated successfully")
+        return response.Response("Employee deactivated successfully",status=status.HTTP_200_OK)
 
 class MakeAdminView(APIView):
     def get(self,request,id):
