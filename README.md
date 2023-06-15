@@ -84,7 +84,7 @@ dict1 = {
 | GET    | get_employee/id    | Get employee by ID   |
 | POST   | add_employee/      | Add new employee     |
 | POST   | delete_employee/id | Delete employee      |
-
+| POST   | edit/id | edit employee details      |
 
 #### Token Generation
 
